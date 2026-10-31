@@ -1,0 +1,91 @@
+
+name: User Management Platform CI-CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: HTML va JavaScript testlari
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Repository kodini yuklash
+        uses: actions/checkout@v4
+
+      - name: Node.js muhitini tayyorlash
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: HTML faylni tekshirish
+        run: |
+          test -f index.html
+          grep -qi '<html' index.html
+          grep -qi '<head' index.html
+          grep -qi '<body' index.html
+          echo "HTML tekshiruvi muvaffaqiyatli!"
+
+      - name: JavaScript sintaksisini tekshirish
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const html = fs.readFileSync('index.html', 'utf8');
+          const scripts = [...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)];
+
+          if (scripts.length === 0) {
+            console.error('JavaScript kodi topilmadi');
+            process.exit(1);
+          }
+
+          scripts.forEach((script, i) => {
+            fs.writeFileSync(`/tmp/script-${i}.js`, script[1]);
+          });
+
+          console.log(`${scripts.length} ta JavaScript bloki topildi`);
+          NODE
+
+          for file in /tmp/script-*.js; do
+            node --check "$file"
+          done
+
+          echo "JavaScript sintaksisi to'g'ri!"
+
+  deploy:
+    name: GitHub Pages deployment
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Repository kodini yuklash
+        uses: actions/checkout@v4
+
+      - name: Pages sozlamalari
+        uses: actions/configure-pages@v5
+
+      - name: Sayt fayllarini tayyorlash
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - name: Saytni internetga joylashtirish
+        id: deployment
+        uses: actions/deploy-pages@v4
