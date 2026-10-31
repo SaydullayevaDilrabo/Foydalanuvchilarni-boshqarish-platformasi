@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Foydalanuvchilarni boshqarish platformasi</title>
+<style>
+:root{
+ --bg:#f2f5fa;--panel:#fff;--text:#172033;--muted:#778198;
+ --primary:#6258e8;--border:#e6eaf2;--green:#16a36a;--red:#e34c5b;
+ --shadow:0 8px 28px rgba(28,39,70,.07);
+}
+body.dark{
+ --bg:#101522;--panel:#192235;--text:#edf2ff;--muted:#a1abc0;
+ --primary:#9188ff;--border:#2b3850;--shadow:0 8px 28px rgba(0,0,0,.2);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif;transition:.25s}
+button,input,select{font:inherit}
+button{cursor:pointer;border:0}
+.app{display:flex;min-height:100vh}
+.sidebar{width:255px;background:var(--panel);border-right:1px solid var(--border);padding:22px 15px;position:fixed;inset:0 auto 0 0;overflow:auto;z-index:5}
+.logo{display:flex;align-items:center;gap:12px;font-size:18px;font-weight:800;padding:5px 10px 28px}
+.logo-icon{background:var(--primary);color:white;border-radius:12px;padding:11px;font-size:20px}
+.menu-label{font-size:11px;color:var(--muted);font-weight:bold;padding:15px 12px 8px;letter-spacing:1px}
+.nav{display:flex;align-items:center;gap:12px;width:100%;padding:13px 12px;margin:3px 0;border-radius:10px;text-align:left;background:transparent;color:var(--muted);font-weight:600}
+.nav:hover,.nav.active{background:color-mix(in srgb,var(--primary) 12%,transparent);color:var(--primary)}
+.main{margin-left:255px;width:calc(100% - 255px);padding:25px 30px}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:27px}
+.page-title{font-size:25px;font-weight:800}
+.top-actions{display:flex;gap:10px;align-items:center}
+.icon-btn{background:var(--panel);border:1px solid var(--border);color:var(--text);padding:11px;border-radius:10px}
+.profile{display:flex;align-items:center;gap:10px;background:var(--panel);padding:7px 12px;border-radius:12px;border:1px solid var(--border)}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--primary);color:white;display:grid;place-items:center;font-weight:bold}
+.section{display:none}.section.active{display:block}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:17px;margin-bottom:22px}
+.card,.panel{background:var(--panel);border:1px solid var(--border);border-radius:15px;padding:20px;box-shadow:var(--shadow)}
+.stat-title{color:var(--muted);font-size:13px;font-weight:600}
+.stat-value{font-size:29px;font-weight:800;margin:12px 0 7px}
+.stat-note{font-size:12px;color:var(--green)}
+.card-icon{float:right;background:color-mix(in srgb,var(--primary) 13%,transparent);padding:10px;border-radius:10px}
+.content-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:18px}
+.panel-title{font-size:17px;font-weight:800;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center}
+.chart{height:210px;display:flex;align-items:end;gap:13px;padding:15px 5px 25px;border-bottom:1px solid var(--border)}
+.bar-wrap{flex:1;height:100%;display:flex;flex-direction:column;justify-content:end;align-items:center;gap:8px}
+.bar{width:65%;max-width:38px;border-radius:7px 7px 2px 2px;background:linear-gradient(180deg,var(--primary),#a49cff);min-height:5px}
+.bar-label{font-size:11px;color:var(--muted)}
+.activity{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);font-size:13px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--green);margin-top:4px;flex-shrink:0}
+.toolbar{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:17px}
+.search{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:11px 14px;color:var(--text);min-width:220px;outline:none}
+.primary{background:var(--primary);color:white;border-radius:9px;padding:11px 16px;font-weight:700}
+.secondary{background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:9px;padding:10px 14px}
+.danger{background:#ffe8eb;color:#c92f43;border-radius:8px;padding:8px 11px}
+table{width:100%;border-collapse:collapse;min-width:650px}
+.table-wrap{overflow-x:auto}
+th,td{text-align:left;padding:14px 12px;border-bottom:1px solid var(--border);font-size:13px}
+th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+td{font-weight:500}
+.user-cell{display:flex;align-items:center;gap:10px}
+.small-avatar{width:34px;height:34px;border-radius:10px;background:color-mix(in srgb,var(--primary) 15%,transparent);color:var(--primary);display:grid;place-items:center;font-weight:bold}
+.status{padding:6px 9px;border-radius:20px;font-size:11px;font-weight:bold;background:#dcf8eb;color:#168252}
+.status.off{background:#ffe6e9;color:#c83a4c}
+.status.pending{background:#fff2d7;color:#9c6a08}
+.actions{display:flex;gap:6px}
+.empty{text-align:center;padding:35px;color:var(--muted)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:7px;font-weight:bold}
+.field input,.field select,.field textarea{width:100%;padding:12px;border:1px solid var(--border);border-radius:9px;background:var(--bg);color:var(--text);outline:none}
+.field.full{grid-column:1/-1}
+.modal-bg{display:none;position:fixed;inset:0;background:#101522a8;z-index:20;align-items:center;justify-content:center;padding:15px}
+.modal-bg.show{display:flex}
+.modal{width:100%;max-width:550px;background:var(--panel);border-radius:17px;padding:25px;max-height:90vh;overflow:auto}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;font-size:19px;font-weight:bold}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+.toast{position:fixed;right:25px;bottom:25px;background:#172033;color:white;padding:14px 20px;border-radius:10px;display:none;z-index:50}
+.toast.show{display:block;animation:fade .3s}
+@keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.settings-row{display:flex;justify-content:space-between;align-items:center;padding:17px 0;border-bottom:1px solid var(--border);gap:15px}
+.login-screen{position:fixed;inset:0;background:var(--bg);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px}
+.login-box{background:var(--panel);border:1px solid var(--border);box-shadow:var(--shadow);border-radius:20px;padding:35px;width:100%;max-width:400px}
+.login-box h2{margin-top:0}
+.login-box input{width:100%;padding:13px;margin:8px 0 15px;border:1px solid var(--border);border-radius:9px;background:var(--bg);color:var(--text)}
+.login-box button{width:100%}
+.login-help{font-size:12px;color:var(--muted);margin-top:15px;line-height:1.6}
+.pagination{display:flex;justify-content:space-between;align-items:center;padding-top:15px;color:var(--muted);font-size:12px}
+.mobile-menu{display:none}
+@media(max-width:1000px){.cards{grid-template-columns:repeat(2,1fr)}.content-grid{grid-template-columns:1fr}}
+@media(max-width:700px){
+ .sidebar{width:70px;padding:15px 8px}.logo{font-size:0;padding:8px}.logo-icon{font-size:18px}
+ .nav{justify-content:center;font-size:0;padding:14px 5px}.nav span{display:none}
+ .menu-label{font-size:0;padding:10px 0}.main{margin-left:70px;width:calc(100% - 70px);padding:18px 12px}
+ .topbar{align-items:flex-start}.page-title{font-size:19px}.profile .profile-name{display:none}
+ .cards{gap:9px}.card{padding:13px}.stat-value{font-size:23px}.form-grid{grid-template-columns:1fr}
+ .field.full{grid-column:auto}
+}
+</style>
+</head>
+<body>
+
+<div class="login-screen" id="loginScreen">
+ <div class="login-box">
+  <div class="logo" style="padding:0 0 20px"><span class="logo-icon">U</span> USER MANAGEMENT</div>
+  <h2 id="loginTitle">Tizimga kirish</h2>
+  <p style="color:var(--muted);font-size:13px">Boshqaruv platformasiga xush kelibsiz.</p>
+  <label>Login</label>
+  <input id="loginUser" value="admin" placeholder="Login">
+  <label>Parol</label>
+  <input id="loginPass" type="password" value="admin123" placeholder="Parol">
+  <button class="primary" onclick="login()">Tizimga kirish</button>
+  <div class="login-help">Demo login: <b>admin</b><br>Demo parol: <b>admin123</b></div>
+ </div>
+</div>
+
+<div class="app">
+<aside class="sidebar">
+ <div class="logo"><span class="logo-icon">U</span><span>USER ADMIN</span></div>
+ <div class="menu-label" data-i18n="mainMenu">ASOSIY MENYU</div>
+ <button class="nav active" data-page="dashboard" onclick="showPage('dashboard',this)">▦ <span data-i18n="dashboard">Bosh sahifa</span></button>
+ <button class="nav" data-page="users" onclick="showPage('users',this)">♙ <span data-i18n="users">Foydalanuvchilar</span></button>
+ <button class="nav" data-page="roles" onclick="showPage('roles',this)">♧ <span data-i18n="roles">Rollar va ruxsatlar</span></button>
+ <button class="nav" data-page="analytics" onclick="showPage('analytics',this)">▥ <span data-i18n="analytics">Tahlillar</span></button>
+ <div class="menu-label" data-i18n="system">TIZIM</div>
+ <button class="nav" data-page="activity" onclick="showPage('activity',this)">◷ <span data-i18n="activity">Faollik jurnali</span></button>
+ <button class="nav" data-page="notifications" onclick="showPage('notifications',this)">♧ <span data-i18n="notifications">Bildirishnomalar</span></button>
+ <button class="nav" data-page="settings" onclick="showPage('settings',this)">⚙ <span data-i18n="settings">Sozlamalar</span></button>
+ <div style="margin-top:35px;border-top:1px solid var(--border);padding-top:15px">
+  <button class="nav" onclick="logout()">↪ <span data-i18n="logout">Chiqish</span></button>
+ </div>
+</aside>
+
+<main class="main">
+ <header class="topbar">
+  <div>
+   <div class="page-title" id="pageTitle">Boshqaruv paneli</div>
+   <div style="font-size:12px;color:var(--muted);margin-top:5px" id="today"></div>
+  </div>
+  <div class="top-actions">
+   <select class="icon-btn" id="language" onchange="changeLanguage(this.value)">
+    <option value="uz">UZ</option><option value="ru">RU</option><option value="en">EN</option>
+   </select>
+   <button class="icon-btn" onclick="toggleTheme()" title="Mavzuni almashtirish">☼</button>
+   <button class="icon-btn" onclick="showPage('notifications')">♧</button>
+   <div class="profile"><div class="avatar">A</div><span class="profile-name">Administrator</span></div>
+  </div>
+ </header>
+
+ <section class="section active" id="dashboard">
+  <div class="cards">
+   <div class="card"><span class="card-icon">♙</span><div class="stat-title" data-i18n="totalUsers">Jami foydalanuvchilar</div><div class="stat-value" id="totalUsers">0</div><div class="stat-note">● <span data-i18n="registered">Ro‘yxatdan o‘tgan</span></div></div>
+   <div class="card"><span class="card-icon">✓</span><div class="stat-title" data-i18n="activeUsers">Faol foydalanuvchilar</div><div class="stat-value" id="activeUsers">0</div><div class="stat-note">● <span data-i18n="onlineSystem">Tizimda faol</span></div></div>
+   <div class="card"><span class="card-icon">◷</span><div class="stat-title" data-i18n="blockedUsers">Bloklanganlar</div><div class="stat-value" id="blockedUsers">0</div><div class="stat-note" style="color:var(--red)">● <span data-i18n="restricted">Kirish cheklangan</span></div></div>
+   <div class="card"><span class="card-icon">♧</span><div class="stat-title" data-i18n="rolesCount">Rollar soni</div><div class="stat-value" id="rolesCount">0</div><div class="stat-note">● <span data-i18n="permissions">Ruxsat darajalari</span></div></div>
+  </div>
+  <div class="content-grid">
+   <div class="panel">
+    <div class="panel-title"><span data-i18n="growth">Foydalanuvchilar o‘sishi</span><span style="font-size:12px;color:var(--muted)">2026</span></div>
+    <div class="chart" id="growthChart"></div>
+   </div>
+   <div class="panel">
+    <div class="panel-title" data-i18n="recentActivity">So‘nggi harakatlar</div>
+    <div id="recentActivities"></div>
+   </div>
+  </div>
+  <div class="panel" style="margin-top:18px">
+   <div class="panel-title"><span data-i18n="latestUsers">Oxirgi foydalanuvchilar</span><button class="secondary" onclick="showPage('users')" data-i18n="viewAll">Barchasini ko‘rish</button></div>
+   <div class="table-wrap"><table><thead><tr><th>Foydalanuvchi</th><th>Email</th><th>Rol</th><th>Holat</th></tr></thead><tbody id="latestTable"></tbody></table></div>
+  </div>
+ </section>
+
+ <section class="section" id="users">
+  <div class="toolbar">
+   <input class="search" id="userSearch" placeholder="Ism yoki email bo‘yicha qidirish..." oninput="renderUsers()">
+   <div style="display:flex;gap:9px;flex-wrap:wrap">
+    <select class="search" id="statusFilter" onchange="renderUsers()"><option value="">Barcha holatlar</option><option value="active">Faol</option><option value="blocked">Bloklangan</option><option value="pending">Kutilmoqda</option></select>
+    <button class="primary" onclick="openUserModal()">＋ Yangi foydalanuvchi</button>
+    <button class="secondary" onclick="exportCSV()">↓ CSV</button>
+   </div>
+  </div>
+  <div class="panel">
+   <div class="panel-title"><span data-i18n="userDirectory">Foydalanuvchilar ro‘yxati</span><span id="userCount" style="font-size:12px;color:var(--muted)"></span></div>
+   <div class="table-wrap"><table><thead><tr><th>Foydalanuvchi</th><th>Email</th><th>Telefon</th><th>Rol</th><th>Holat</th><th>Amallar</th></tr></thead><tbody id="usersTable"></tbody></table></div>
+   <div class="pagination"><span id="pageInfo">0 ta natija</span><div><button class="secondary" onclick="changePage(-1)">‹</button> <button class="secondary" onclick="changePage(1)">›</button></div></div>
+  </div>
+ </section>
+
+ <section class="section" id="roles">
+  <div class="toolbar"><div style="color:var(--muted);font-size:13px">Foydalanuvchilarga beriladigan tizim rollari va huquqlari.</div><button class="primary" onclick="openRoleModal()">＋ Yangi rol</button></div>
+  <div class="cards" id="roleCards"></div>
+  <div class="panel"><div class="panel-title">Ruxsatlar jadvali</div><div class="table-wrap"><table><thead><tr><th>Rol</th><th>Ko‘rish</th><th>Yaratish</th><th>Tahrirlash</th><th>O‘chirish</th><th>Boshqarish</th></tr></thead><tbody id="permissionsTable"></tbody></table></div></div>
+ </section>
+
+ <section class="section" id="analytics">
+  <div class="cards">
+   <div class="card"><div class="stat-title">Umumiy foydalanuvchilar</div><div class="stat-value" id="anTotal">0</div></div>
+   <div class="card"><div class="stat-title">Faollik darajasi</div><div class="stat-value" id="anRate">0%</div></div>
+   <div class="card"><div class="stat-title">Bloklanganlar</div><div class="stat-value" id="anBlocked">0</div></div>
+   <div class="card"><div class="stat-title">Tizim rollari</div><div class="stat-value" id="anRoles">0</div></div>
+  </div>
+  <div class="panel"><div class="panel-title">Foydalanuvchilar statistikasi</div><div class="chart" id="analyticsChart"></div></div>
+  <div class="panel" style="margin-top:18px"><div class="panel-title">Holatlar bo‘yicha taqsimot</div><div id="statusStats"></div></div>
+ </section>
+
+ <section class="section" id="activity">
+  <div class="toolbar"><input class="search" id="activitySearch" placeholder="Faollikni qidirish..." oninput="renderActivity()"><button class="secondary" onclick="clearActivity()">Jurnalni tozalash</button></div>
+  <div class="panel"><div class="panel-title">Tizim faolligi jurnali</div><div id="activityList"></div></div>
+ </section>
+
+ <section class="section" id="notifications">
+  <div class="panel"><div class="panel-title">Bildirishnomalar</div><div id="notificationList"></div></div>
+ </section>
+
+ <section class="section" id="settings">
+  <div class="panel">
+   <div class="panel-title">Umumiy sozlamalar</div>
+   <div class="settings-row"><div><b>Interfeys mavzusi</b><div style="color:var(--muted);font-size:12px;margin-top:5px">Yorug‘ yoki qorong‘i rejim</div></div><button class="secondary" onclick="toggleTheme()">Mavzuni almashtirish</button></div>
+   <div class="settings-row"><div><b>Til</b><div style="color:var(--muted);font-size:12px;margin-top:5px">O‘zbek, rus, ingliz tillari</div></div><select class="search" onchange="changeLanguage(this.value)"><option value="uz">O‘zbekcha</option><option value="ru">Русский</option><option value="en">English</option></select></div>
+   <div class="settings-row"><div><b>Ma’lumotlarni eksport qilish</b><div style="color:var(--muted);font-size:12px;margin-top:5px">Foydalanuvchilar ro‘yxatini CSV formatida saqlash</div></div><button class="secondary" onclick="exportCSV()">Eksport</button></div>
+   <div class="settings-row"><div><b>Ma’lumotlarni zaxiralash</b><div style="color:var(--muted);font-size:12px;margin-top:5px">Platforma ma’lumotlarini JSON faylga saqlash</div></div><button class="secondary" onclick="backupData()">Zaxiralash</button></div>
+   <div class="settings-row"><div><b>Demo ma’lumotlarni tiklash</b><div style="color:var(--muted);font-size:12px;margin-top:5px">Boshlang‘ich foydalanuvchilarni qayta yuklash</div></div><button class="danger" onclick="resetData()">Tiklash</button></div>
+  </div>
+  <div class="panel" style="margin-top:18px"><div class="panel-title">Tizim haqida</div><p style="color:var(--muted);line-height:1.8;font-size:13px">Foydalanuvchilarni boshqarish platformasi — foydalanuvchilar, rollar, ruxsatlar, tizim faolligi va statistikani boshqarish uchun yaratilgan veb-ilova. Versiya: 1.0.0</p></div>
+ </section>
+</main>
+</div>
+
+<div class="modal-bg" id="userModal">
+ <div class="modal">
+  <div class="modal-head"><span id="userModalTitle">Yangi foydalanuvchi</span><button class="icon-btn" onclick="closeModal('userModal')">✕</button></div>
+  <form id="userForm" onsubmit="saveUser(event)">
+   <input type="hidden" id="editId">
+   <div class="form-grid">
+    <div class="field"><label>Ism</label><input id="firstName" required placeholder="Ism"></div>
+    <div class="field"><label>Familiya</label><input id="lastName" required placeholder="Familiya"></div>
+    <div class="field"><label>Email</label><input id="email" type="email" required placeholder="example@mail.com"></div>
+    <div class="field"><label>Telefon</label><input id="phone" placeholder="+998 90 123 45 67"></div>
+    <div class="field"><label>Rol</label><select id="userRole"></select></div>
+    <div class="field"><label>Holat</label><select id="userStatus"><option value="active">Faol</option><option value="blocked">Bloklangan</option><option value="pending">Kutilmoqda</option></select></div>
+    <div class="field full"><label>Izoh</label><textarea id="userNote" rows="3" style="width:100%;padding:12px;border:1px solid var(--border);border-radius:9px;background:var(--bg);color:var(--text)"></textarea></div>
+   </div>
+   <div class="modal-actions"><button type="button" class="secondary" onclick="closeModal('userModal')">Bekor qilish</button><button class="primary" type="submit">Saqlash</button></div>
+  </form>
+ </div>
+</div>
+
+<div class="modal-bg" id="roleModal">
+ <div class="modal">
+  <div class="modal-head"><span>Yangi rol yaratish</span><button class="icon-btn" onclick="closeModal('roleModal')">✕</button></div>
+  <form onsubmit="saveRole(event)">
+   <div class="field"><label>Rol nomi</label><input id="roleName" required placeholder="Masalan: Moderator"></div>
+   <div class="field" style="margin-top:15px"><label>Tavsif</label><input id="roleDescription" placeholder="Rol vazifasi"></div>
+   <div class="modal-actions"><button type="button" class="secondary" onclick="closeModal('roleModal')">Bekor qilish</button><button class="primary">Saqlash</button></div>
+  </form>
+ </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const translations={
+ uz:{mainMenu:"ASOSIY MENYU",dashboard:"Bosh sahifa",users:"Foydalanuvchilar",roles:"Rollar va ruxsatlar",analytics:"Tahlillar",system:"TIZIM",activity:"Faollik jurnali",notifications:"Bildirishnomalar",settings:"Sozlamalar",logout:"Chiqish",totalUsers:"Jami foydalanuvchilar",activeUsers:"Faol foydalanuvchilar",blockedUsers:"Bloklanganlar",rolesCount:"Rollar soni",registered:"Ro‘yxatdan o‘tgan",onlineSystem:"Tizimda faol",restricted:"Kirish cheklangan",permissions:"Ruxsat darajalari",growth:"Foydalanuvchilar o‘sishi",recentActivity:"So‘nggi harakatlar",latestUsers:"Oxirgi foydalanuvchilar",viewAll:"Barchasini ko‘rish",userDirectory:"Foydalanuvchilar ro‘yxati"},
+ ru:{mainMenu:"ГЛАВНОЕ МЕНЮ",dashboard:"Главная",users:"Пользователи",roles:"Роли и права",analytics:"Аналитика",system:"СИСТЕМА",activity:"Журнал активности",notifications:"Уведомления",settings:"Настройки",logout:"Выход",totalUsers:"Всего пользователей",activeUsers:"Активные пользователи",blockedUsers:"Заблокированные",rolesCount:"Количество ролей",registered:"Зарегистрированы",onlineSystem:"Активны в системе",restricted:"Доступ ограничен",permissions:"Уровни доступа",growth:"Рост пользователей",recentActivity:"Последние действия",latestUsers:"Новые пользователи",viewAll:"Посмотреть все",userDirectory:"Список пользователей"},
+ en:{mainMenu:"MAIN MENU",dashboard:"Dashboard",users:"Users",roles:"Roles & Permissions",analytics:"Analytics",system:"SYSTEM",activity:"Activity Log",notifications:"Notifications",settings:"Settings",logout:"Logout",totalUsers:"Total users",activeUsers:"Active users",blockedUsers:"Blocked users",rolesCount:"Number of roles",registered:"Registered accounts",onlineSystem:"Active in system",restricted:"Access restricted",permissions:"Permission levels",growth:"User growth",recentActivity:"Recent activity",latestUsers:"Latest users",viewAll:"View all",userDirectory:"User directory"}
+};
+const pageNames={dashboard:{uz:"Boshqaruv paneli",ru:"Панель управления",en:"Dashboard"},users:{uz:"Foydalanuvchilar",ru:"Пользователи",en:"Users"},roles:{uz:"Rollar va ruxsatlar",ru:"Роли и права",en:"Roles & Permissions"},analytics:{uz:"Tahlillar",ru:"Аналитика",en:"Analytics"},activity:{uz:"Faollik jurnali",ru:"Журнал активности",en:"Activity log"},notifications:{uz:"Bildirishnomalar",ru:"Уведомления",en:"Notifications"},settings:{uz:"Sozlamalar",ru:"Настройки",en:"Settings"}};
+
+let users=[
+{id:1,first:"Ali",last:"Valiyev",email:"ali@example.com",phone:"+998 90 111 22 33",role:"Administrator",status:"active",note:"Tizim administratori"},
+{id:2,first:"Malika",last:"Karimova",email:"malika@example.com",phone:"+998 91 222 33 44",role:"Manager",status:"active",note:""},
+{id:3,first:"Jasur",last:"Rasulov",email:"jasur@example.com",phone:"+998 93 333 44 55",role:"User",status:"pending",note:""},
+{id:4,first:"Madina",last:"Sobirova",email:"madina@example.com",phone:"+998 94 444 55 66",role:"Moderator",status:"blocked",note:""},
+{id:5,first:"Aziz",last:"Toshmatov",email:"aziz@example.com",phone:"+998 95 555 66 77",role:"User",status:"active",note:""},
+{id:6,first:"Shahnoza",last:"Qodirova",email:"shahnoza@example.com",phone:"+998 97 666 77 88",role:"Manager",status:"active",note:""}
+];
+let roles=[
+{name:"Administrator",description:"Tizimni to‘liq boshqaradi",users:1,level:"To‘liq kirish",permissions:[1,1,1,1,1]},
+{name:"Manager",description:"Foydalanuvchilarni boshqaradi",users:2,level:"Yuqori",permissions:[1,1,1,0,0]},
+{name:"Moderator",description:"Kontent va foydalanuvchilarni nazorat qiladi",users:1,level:"O‘rta",permissions:[1,1,0,0,0]},
+{name:"User",description:"Oddiy foydalanuvchi",users:2,level:"Cheklangan",permissions:[1,0,0,0,0]}
+];
+let activities=[
+{message:"Administrator tizimga kirdi",time:"Bugun, 09:15"},
+{message:"Yangi foydalanuvchi ro‘yxatdan o‘tdi",time:"Bugun, 10:20"},
+{message:"Foydalanuvchi holati o‘zgartirildi",time:"Bugun, 11:05"},
+{message:"Tizim sozlamalari yangilandi",time:"Bugun, 12:30"}
+];
+let notifications=[
+{title:"Yangi foydalanuvchi",body:"Yangi foydalanuvchi tizimga qo‘shildi.",time:"10 daqiqa oldin"},
+{title:"Xavfsizlik xabari",body:"Tizim administratori sifatida kirish amalga oshirildi.",time:"1 soat oldin"},
+{title:"Tizim holati",body:"Platforma normal ishlamoqda.",time:"Bugun"}
+];
+let currentPage=1,perPage=6,lang="uz";
+
+function saveData(){localStorage.setItem("ums_users",JSON.stringify(users));localStorage.setItem("ums_roles",JSON.stringify(roles));localStorage.setItem("ums_activities",JSON.stringify(activities));localStorage.setItem("ums_notifications",JSON.stringify(notifications))}
+function loadData(){
+ try{users=JSON.parse(localStorage.getItem("ums_users"))||users;roles=JSON.parse(localStorage.getItem("ums_roles"))||roles;activities=JSON.parse(localStorage.getItem("ums_activities"))||activities;notifications=JSON.parse(localStorage.getItem("ums_notifications"))||notifications}catch(e){}
+}
+function toast(msg){let t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2600)}
+function logActivity(message){activities.unshift({message,time:new Date().toLocaleString()});activities=activities.slice(0,100);saveData();renderActivity();renderDashboard()}
+function login(){
+ let u=document.getElementById("loginUser").value.trim(),p=document.getElementById("loginPass").value;
+ if(u==="admin"&&p==="admin123"){document.getElementById("loginScreen").style.display="none";localStorage.setItem("ums_logged","1");toast("Tizimga muvaffaqiyatli kirildi");logActivity("Administrator tizimga kirdi")}
+ else toast("Login yoki parol noto‘g‘ri!");
+}
+function logout(){localStorage.removeItem("ums_logged");document.getElementById("loginScreen").style.display="flex"}
+function showPage(page,el){
+ document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+ document.getElementById(page).classList.add("active");
+ document.querySelectorAll(".nav[data-page]").forEach(n=>n.classList.toggle("active",n.dataset.page===page));
+ document.getElementById("pageTitle").textContent=pageNames[page][lang];
+ if(page==="users")renderUsers();
+ if(page==="roles")renderRoles();
+ if(page==="analytics")renderAnalytics();
+ if(page==="activity")renderActivity();
+ if(page==="notifications")renderNotifications();
+}
+function toggleTheme(){document.body.classList.toggle("dark");localStorage.setItem("ums_theme",document.body.classList.contains("dark")?"dark":"light")}
+function changeLanguage(value){
+ lang=value;localStorage.setItem("ums_lang",lang);
+ document.getElementById("language").value=lang;
+ document.querySelectorAll("[data-i18n]").forEach(el=>{let k=el.dataset.i18n;if(translations[lang][k])el.textContent=translations[lang][k]});
+ let active=document.querySelector(".section.active");if(active)document.getElementById("pageTitle").textContent=pageNames[active.id][lang];
+}
+function statusLabel(s){return s==="active"?"Faol":s==="blocked"?"Bloklangan":"Kutilmoqda"}
+function statusClass(s){return s==="active"?"status":s==="blocked"?"status off":"status pending"}
+function initials(u){return (u.first[0]+u.last[0]).toUpperCase()}
+function renderDashboard(){
+ let active=users.filter(u=>u.status==="active").length,blocked=users.filter(u=>u.status==="blocked").length;
+ document.getElementById("totalUsers").textContent=users.length;
+ document.getElementById("activeUsers").textContent=active;
+ document.getElementById("blockedUsers").textContent=blocked;
+ document.getElementById("rolesCount").textContent=roles.length;
+ document.getElementById("recentActivities").innerHTML=activities.slice(0,5).map(a=>`<div class="activity"><span class="dot"></span><div>${escapeHTML(a.message)}<div style="color:var(--muted);font-size:11px;margin-top:5px">${escapeHTML(a.time)}</div></div></div>`).join("")||"<div class='empty'>Ma’lumot yo‘q</div>";
+ document.getElementById("latestTable").innerHTML=users.slice(-4).reverse().map(u=>`<tr><td><div class="user-cell"><div class="small-avatar">${initials(u)}</div>${escapeHTML(u.first+" "+u.last)}</div></td><td>${escapeHTML(u.email)}</td><td>${escapeHTML(u.role)}</td><td><span class="${statusClass(u.status)}">${statusLabel(u.status)}</span></td></tr>`).join("");
+ let vals=[3,5,4,7,6,9,8,11,10,14,13,users.length+10];
+ document.getElementById("growthChart").innerHTML=vals.map((v,i)=>`<div class="bar-wrap"><div class="bar" style="height:${Math.max(8,v*9)}%"></div><span class="bar-label">${["Yan","Fev","Mar","Apr","May","Iyun","Iyul","Avg","Sen","Okt","Noy","Dek"][i]}</span></div>`).join("");
+}
+function renderUsers(){
+ let q=(document.getElementById("userSearch").value||"").toLowerCase(),f=document.getElementById("statusFilter").value;
+ let list=users.filter(u=>(u.first+" "+u.last+" "+u.email).toLowerCase().includes(q)&&(!f||u.status===f));
+ let pages=Math.max(1,Math.ceil(list.length/perPage));currentPage=Math.min(currentPage,pages);
+ let visible=list.slice((currentPage-1)*perPage,currentPage*perPage);
+ document.getElementById("usersTable").innerHTML=visible.map(u=>`<tr>
+ <td><div class="user-cell"><div class="small-avatar">${initials(u)}</div><div><b>${escapeHTML(u.first+" "+u.last)}</b><div style="font-size:11px;color:var(--muted)">ID: ${u.id}</div></div></div></td>
+ <td>${escapeHTML(u.email)}</td><td>${escapeHTML(u.phone||"—")}</td><td>${escapeHTML(u.role)}</td>
+ <td><span class="${statusClass(u.status)}">${statusLabel(u.status)}</span></td>
+ <td><div class="actions"><button class="secondary" onclick="editUser(${u.id})">✎</button><button class="secondary" onclick="toggleUserStatus(${u.id})">${u.status==="blocked"?"✓":"⊘"}</button><button class="danger" onclick="deleteUser(${u.id})">✕</button></div></td></tr>`).join("")||`<tr><td colspan="6" class="empty">Foydalanuvchilar topilmadi</td></tr>`;
+ document.getElementById("userCount").textContent=list.length+" ta foydalanuvchi";
+ document.getElementById("pageInfo").textContent=`${list.length} ta natija · ${currentPage}/${pages}`;
+}
+function changePage(n){currentPage=Math.max(1,currentPage+n);renderUsers()}
+function openUserModal(){
+ document.getElementById("userForm").reset();document.getElementById("editId").value="";
+ document.getElementById("userModalTitle").textContent="Yangi foydalanuvchi";
+ document.getElementById("userRole").innerHTML=roles.map(r=>`<option>${escapeHTML(r.name)}</option>`).join("");
+ document.getElementById("userModal").classList.add("show");
+}
+function editUser(id){
+ let u=users.find(x=>x.id===id);if(!u)return;
+ openUserModal();document.getElementById("userModalTitle").textContent="Foydalanuvchini tahrirlash";
+ document.getElementById("editId").value=id;document.getElementById("firstName").value=u.first;
+ document.getElementById("lastName").value=u.last;document.getElementById("email").value=u.email;
+ document.getElementById("phone").value=u.phone;document.getElementById("userRole").value=u.role;
+ document.getElementById("userStatus").value=u.status;document.getElementById("userNote").value=u.note||"";
+}
+function saveUser(e){
+ e.preventDefault();
+ let id=Number(document.getElementById("editId").value);
+ let data={first:document.getElementById("firstName").value.trim(),last:document.getElementById("lastName").value.trim(),email:document.getElementById("email").value.trim(),phone:document.getElementById("phone").value.trim(),role:document.getElementById("userRole").value,status:document.getElementById("userStatus").value,note:document.getElementById("userNote").value.trim()};
+ if(users.some(u=>u.email.toLowerCase()===data.email.toLowerCase()&&u.id!==id)){toast("Bu email allaqachon mavjud!");return}
+ if(id){let i=users.findIndex(u=>u.id===id);users[i]={...users[i],...data};logActivity(data.first+" "+data.last+" ma’lumotlari tahrirlandi")}
+ else{data.id=Math.max(0,...users.map(u=>u.id))+1;users.push(data);logActivity(data.first+" "+data.last+" tizimga qo‘shildi")}
+ saveData();closeModal("userModal");renderAll();toast("Ma’lumot muvaffaqiyatli saqlandi");
+}
+function deleteUser(id){let u=users.find(x=>x.id===id);if(!u)return;if(confirm(u.first+" "+u.last+" foydalanuvchisini o‘chirmoqchimisiz?")){users=users.filter(x=>x.id!==id);saveData();logActivity(u.first+" "+u.last+" o‘chirildi");renderAll();toast("Foydalanuvchi o‘chirildi")}}
+function toggleUserStatus(id){
+ let u=users.find(x=>x.id===id);if(!u)return;u.status=u.status==="blocked"?"active":"blocked";
+ saveData();logActivity(u.first+" "+u.last+" holati: "+statusLabel(u.status));renderAll();toast("Foydalanuvchi holati yangilandi");
+}
+function renderRoles(){
+ document.getElementById("roleCards").innerHTML=roles.map((r,i)=>`<div class="card"><span class="card-icon">♧</span><div class="stat-title">TIZIM ROLI</div><div class="stat-value" style="font-size:22px">${escapeHTML(r.name)}</div><div style="font-size:12px;color:var(--muted);min-height:35px">${escapeHTML(r.description)}</div><div style="margin-top:14px;font-size:12px">Foydalanuvchilar: <b>${users.filter(u=>u.role===r.name).length}</b></div>${r.name!=="Administrator"?`<button class="danger" style="margin-top:13px" onclick="deleteRole(${i})">Rolni o‘chirish</button>`:""}</div>`).join("");
+ document.getElementById("permissionsTable").innerHTML=roles.map(r=>`<tr><td><b>${escapeHTML(r.name)}</b></td>${r.permissions.map(p=>`<td>${p?"✓":"—"}</td>`).join("")}</tr>`).join("");
+ document.getElementById("rolesCount").textContent=roles.length;
+}
+function openRoleModal(){document.getElementById("roleModal").classList.add("show")}
+function saveRole(e){e.preventDefault();let name=document.getElementById("roleName").value.trim();if(roles.some(r=>r.name.toLowerCase()===name.toLowerCase())){toast("Bu rol mavjud!");return}roles.push({name,description:document.getElementById("roleDescription").value,users:0,level:"Maxsus",permissions:[1,0,0,0,0]});saveData();closeModal("roleModal");renderRoles();logActivity("Yangi rol yaratildi: "+name);toast("Rol yaratildi")}
+function deleteRole(i){let name=roles[i].name;if(users.some(u=>u.role===name)){toast("Bu rolga biriktirilgan foydalanuvchilar bor!");return}if(confirm(name+" rolini o‘chirasizmi?")){roles.splice(i,1);saveData();renderRoles();logActivity(name+" roli o‘chirildi")}}
+function renderAnalytics(){
+ let a=users.filter(u=>u.status==="active").length,b=users.filter(u=>u.status==="blocked").length;
+ document.getElementById("anTotal").textContent=users.length;document.getElementById("anRate").textContent=users.length?Math.round(a/users.length*100)+"%":"0%";document.getElementById("anBlocked").textContent=b;document.getElementById("anRoles").textContent=roles.length;
+ let counts=[a,b,users.filter(u=>u.status==="pending").length],labels=["Faol","Bloklangan","Kutilmoqda"],total=Math.max(1,users.length);
+ document.getElementById("statusStats").innerHTML=counts.map((v,i)=>`<div style="margin:18px 0"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px"><b>${labels[i]}</b><span>${v} (${Math.round(v/total*100)}%)</span></div><div style="height:9px;background:var(--bg);border-radius:9px;overflow:hidden"><div style="height:100%;width:${v/total*100}%;background:${["#16a36a","#e34c5b","#d69b29"][i]};border-radius:9px"></div></div></div>`).join("");
+ document.getElementById("analyticsChart").innerHTML=[4,6,5,8,9,7,11,10,13,12,15,users.length+10].map((v,i)=>`<div class="bar-wrap"><div class="bar" style="height:${v*7}%"></div><span class="bar-label">${i+1}-oy</span></div>`).join("");
+}
+function renderActivity(){
+ let q=(document.getElementById("activitySearch").value||"").toLowerCase();
+ let list=activities.filter(a=>a.message.toLowerCase().includes(q));
+ document.getElementById("activityList").innerHTML=list.map(a=>`<div class="activity"><span class="dot"></span><div><b>${escapeHTML(a.message)}</b><div style="color:var(--muted);font-size:11px;margin-top:5px">${escapeHTML(a.time)}</div></div></div>`).join("")||"<div class='empty'>Faollik qaydlari mavjud emas</div>";
+}
+function clearActivity(){if(confirm("Faollik jurnalini tozalaysizmi?")){activities=[];saveData();renderActivity();renderDashboard()}}
+function renderNotifications(){
+ document.getElementById("notificationList").innerHTML=notifications.map(n=>`<div class="activity"><span class="dot"></span><div><b>${escapeHTML(n.title)}</b><div style="font-size:13px;margin-top:5px">${escapeHTML(n.body)}</div><div style="color:var(--muted);font-size:11px;margin-top:5px">${escapeHTML(n.time)}</div></div></div>`).join("")||"<div class='empty'>Bildirishnomalar yo‘q</div>";
+}
+function exportCSV(){
+ let rows=[["ID","Ism","Familiya","Email","Telefon","Rol","Holat"],...users.map(u=>[u.id,u.first,u.last,u.email,u.phone,u.role,u.status])];
+ let csv="\uFEFF"+rows.map(r=>r.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(";")).join("\n");
+ downloadFile("foydalanuvchilar.csv",csv,"text/csv;charset=utf-8");toast("CSV fayl yuklandi");
+}
+function backupData(){
+ let data={users,roles,activities,notifications,backupDate:new Date().toISOString()};
+ downloadFile("platforma_zaxira.json",JSON.stringify(data,null,2),"application/json");toast("Zaxira fayli tayyor");
+}
+function downloadFile(name,content,type){
+ let blob=new Blob([content],{type}),url=URL.createObjectURL(blob),a=document.createElement("a");
+ a.href=url;a.download=name;a.click();URL.revokeObjectURL(url);
+}
+function resetData(){if(confirm("Barcha ma’lumotlarni boshlang‘ich holatga qaytarasizmi?")){localStorage.removeItem("ums_users");localStorage.removeItem("ums_roles");localStorage.removeItem("ums_activities");localStorage.removeItem("ums_notifications");location.reload()}}
+function closeModal(id){document.getElementById(id).classList.remove("show")}
+function escapeHTML(value){return String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function renderAll(){renderDashboard();renderUsers();renderRoles();renderAnalytics();renderActivity();renderNotifications()}
+document.querySelectorAll(".modal-bg").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)m.classList.remove("show")}));
+document.getElementById("today").textContent=new Date().toLocaleDateString("uz-UZ",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
+loadData();
+if(localStorage.getItem("ums_theme")==="dark")document.body.classList.add("dark");
+lang=localStorage.getItem("ums_lang")||"uz";document.getElementById("language").value=lang;changeLanguage(lang);
+if(localStorage.getItem("ums_logged")==="1")document.getElementById("loginScreen").style.display="none";
+renderAll();
+</script>
+</body>
+</html>
